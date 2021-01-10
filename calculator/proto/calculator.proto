@@ -3,20 +3,27 @@ syntax = "proto3";
 package calculator;
 option go_package=".;calculator";
 
-message SumNumbers {
-    int64 a = 1;
-    int64 b = 2;
-}
-
 message SumRequest {
-    SumNumbers numbers = 1;
+    int64 first_number = 1;
+    int64 second_number = 2;
 }
 
 message SumResponse {
     int64 result = 1;
 }
 
-service SumService {
+message PrimeNumberDecompositionRequest {
+    int32 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+    int32 result = 1;
+}
+
+service CalculatorService {
     // Unary
     rpc Sum(SumRequest) returns (SumResponse) {};
+
+    // ServerStreaming
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
 }
