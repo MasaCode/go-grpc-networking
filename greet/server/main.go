@@ -1,4 +1,4 @@
-package main;
+package main
 
 import (
 	"context"
@@ -39,7 +39,7 @@ func (*server) GreetManyTimes(req *greet.GreetManyTimesRequest, stream greet.Gre
 }
 
 func (*server) LongGreet(stream greet.GreetService_LongGreetServer) error {
-	fmt.Printf("GreetManyTimes function was invoked with a streaming request \n")
+	fmt.Printf("LongGreet function was invoked with a streaming request \n")
 	result := "HELLO "
 	for {
 		req, err := stream.Recv()
@@ -54,6 +54,30 @@ func (*server) LongGreet(stream greet.GreetService_LongGreetServer) error {
 		firstName := req.GetGreeting().FirstName
 		result += firstName + "! "
 	}
+}
+
+func (*server) GreetEveryone(stream greet.GreetService_GreetEveryoneServer) error {
+	fmt.Printf("GreetEveryone function was invoked with a streaming request \n")
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("error while receving client request: %v\n", err)
+			return err
+		}
+
+		firstName := req.GetGreeting().GetFirstName()
+		sendErr := stream.Send(&greet.GreetEveryoneResponse{
+			Result: "HELLO " + firstName,
+		})
+		if sendErr != nil {
+			log.Fatalf("error while sending response: %v\n", sendErr)
+			return sendErr
+		}
+	}
+	return nil
 }
 
 func main() {
