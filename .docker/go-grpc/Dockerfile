@@ -1,4 +1,4 @@
-FROM golang:1.13-stretch
+FROM golang:1.15.6-buster
 
 SHELL ["/bin/bash", "-c"]
 RUN apt update && apt-get install -y vim unzip
