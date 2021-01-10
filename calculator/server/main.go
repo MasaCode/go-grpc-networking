@@ -78,14 +78,13 @@ func (*server) FindMaximum(stream calculator.CalculatorService_FindMaximumServer
 		// set currentMax only if the requested number is bigger than current
 		if currentMax < req.GetNumber() {
 			currentMax = req.GetNumber()
-		}
-
-		sendErr := stream.Send(&calculator.FindMaximumResponse{
-			Result: currentMax,
-		})
-		if sendErr != nil {
-			log.Fatalf("Error while sending response: %v\n", sendErr)
-			return sendErr
+			sendErr := stream.Send(&calculator.FindMaximumResponse{
+				Result: currentMax,
+			})
+			if sendErr != nil {
+				log.Fatalf("Error while sending response: %v\n", sendErr)
+				return sendErr
+			}
 		}
 	}
 	return nil
