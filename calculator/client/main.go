@@ -22,7 +22,51 @@ func main() {
 	c := calculator.NewCalculatorServiceClient(conn)
 	//doUnary(c)
 	//doServerStreaming(c)
-	doClientStreaming(c)
+	//doClientStreaming(c)
+	doBiDirectionalStreaming(c)
+}
+
+func doBiDirectionalStreaming (client calculator.CalculatorServiceClient) {
+	stream, err := client.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("error while opening stream: %v\n", err)
+	}
+
+	waitc := make(chan struct{})
+
+	go func () {
+		numbers := []int32{2, 5, 100, 3, 4, 200}
+		for _, number := range numbers {
+			fmt.Printf("Sending Request: %v\n", number)
+			err := stream.Send(&calculator.FindMaximumRequest{
+				Number: number,
+			})
+			if err != nil {
+				log.Fatalf("error while sending request: %v\n", err)
+			}
+			time.Sleep(1000 * time.Millisecond)
+		}
+		err := stream.CloseSend()
+		if err != nil {
+			log.Fatalf("error while closing connection: %v\n", err)
+		}
+	}()
+
+	go func () {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("error while receiving response: %v\n", err)
+			}
+			fmt.Printf("Server Response: %v\n", res.Result)
+		}
+		close(waitc)
+	}()
+
+	<-waitc
 }
 
 func doClientStreaming (client calculator.CalculatorServiceClient) {
