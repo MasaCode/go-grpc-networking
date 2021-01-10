@@ -7,6 +7,7 @@ import (
 	"go-grpc-networking/calculator/pb"
 	"io"
 	"log"
+	"time"
 )
 
 func main() {
@@ -20,7 +21,41 @@ func main() {
 
 	c := calculator.NewCalculatorServiceClient(conn)
 	//doUnary(c)
-	doServerStreaming(c)
+	//doServerStreaming(c)
+	doClientStreaming(c)
+}
+
+func doClientStreaming (client calculator.CalculatorServiceClient) {
+	requests := []*calculator.ComputeAverageRequest{
+		&calculator.ComputeAverageRequest{
+			Number: 1,
+		},
+		&calculator.ComputeAverageRequest{
+			Number: 2,
+		},
+		&calculator.ComputeAverageRequest{
+			Number: 3,
+		},
+		&calculator.ComputeAverageRequest{
+			Number: 4,
+		},
+	}
+	stream, err := client.ComputeAverage(context.Background())
+	if err != nil {
+		log.Fatalf("error while invoking ComputeAverage RPC method: %v\n", err)
+	}
+
+	for _, req := range requests {
+		fmt.Printf("Sending Request: %v\n", req)
+		stream.Send(req)
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving server response: %v\n", err)
+	}
+	fmt.Printf("\n\nServer Response: %v\n", res.Result)
 }
 
 func doServerStreaming (client calculator.CalculatorServiceClient) {

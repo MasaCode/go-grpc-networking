@@ -3,6 +3,7 @@ package main;
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"google.golang.org/grpc"
@@ -39,6 +40,26 @@ func (*server) PrimeNumberDecomposition(req *calculator.PrimeNumberDecomposition
 		}
 	}
 	return nil
+}
+
+func (*server) ComputeAverage(stream calculator.CalculatorService_ComputeAverageServer) error {
+	fmt.Printf("Server was called with: a stream request \n")
+	sum := int32(0)
+	count := int32(0)
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			average := float64(sum) / float64(count)
+			return stream.SendAndClose(&calculator.ComputeAverageResponse{
+				Result: average,
+			})
+		}
+		if err != nil {
+			log.Fatalf("error while receiving client request: %v\n", err)
+		}
+		sum += req.GetNumber()
+		count++
+	}
 }
 
 func main () {
