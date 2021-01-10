@@ -3,6 +3,7 @@ package main;
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"google.golang.org/grpc"
@@ -35,6 +36,24 @@ func (*server) GreetManyTimes(req *greet.GreetManyTimesRequest, stream greet.Gre
 		time.Sleep(1000 * time.Millisecond)
 	}
 	return nil
+}
+
+func (*server) LongGreet(stream greet.GreetService_LongGreetServer) error {
+	fmt.Printf("GreetManyTimes function was invoked with a streaming request \n")
+	result := "HELLO "
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&greet.LongGreetResponse{
+				Result: result,
+			})
+		}
+		if err != nil {
+			log.Fatalf("error while reading client stream: %v\n", err)
+		}
+		firstName := req.GetGreeting().FirstName
+		result += firstName + "! "
+	}
 }
 
 func main() {
