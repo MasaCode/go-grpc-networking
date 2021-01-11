@@ -3,8 +3,11 @@ package main;
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 	"google.golang.org/grpc"
 	"go-grpc-networking/calculator/pb"
@@ -88,6 +91,20 @@ func (*server) FindMaximum(stream calculator.CalculatorService_FindMaximumServer
 		}
 	}
 	return nil
+}
+
+func (*server) SquareRoot(ctx context.Context, req *calculator.SquareRootRequest) (*calculator.SquareRootResponse, error){
+	fmt.Printf("Server was called with: %v\n", req)
+	number := req.GetNumber()
+	if number < 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			fmt.Sprintf("Received a negative number: %v", number),
+		)
+	}
+	return &calculator.SquareRootResponse{
+		Result: math.Sqrt(float64(number)),
+	}, nil
 }
 
 func main () {
